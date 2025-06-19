@@ -40,10 +40,15 @@ jobs:
             git checkout ${{ github.ref_name }}
             cd docker-compose/$VERSION
 
-            echo "🛑 หยุดและลบ container เก่า"
-            docker-compose down --remove-orphans  # ❗ หยุด container ตัวเก่าที่ bind พอร์ตอยู่
+            echo "🛑 หยุดและลบ container เดิม"
+            docker-compose down --remove-orphans || true
 
-            echo "📥 ดึง image ใหม่ (ถ้ามี)"
+            echo "🧹 ลบ container ชื่อ fix เดิม (ถ้ามี)"
+            docker rm -f postgres_db || true
+            docker rm -f webapi_container || true
+            docker rm -f webapp_container || true
+
+            echo "📥 ดึง image ล่าสุด"
             docker-compose pull
 
             echo "🚀 รัน container ใหม่แบบ clean"
