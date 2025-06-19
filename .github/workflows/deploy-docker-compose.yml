@@ -1,42 +1,34 @@
-name: Deploy Docker Compose
+name: Deploy by Version
 
 on:
   workflow_dispatch:
+    inputs:
+      version:
+        description: "Docker Compose Version (เช่น version1.0)"
+        required: true
+        default: "version1.0"
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
     steps:
-      - name: 📂 Checkout code
+      - name: 📂 Checkout Code
         uses: actions/checkout@v3
 
-      - name: 📁 Ensure deploy directory exists
+      - name: 🚀 Deploy version ${{ github.event.inputs.version }}
         uses: appleboy/ssh-action@v1.0.0
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
+            VERSION=${{ github.event.inputs.version }}
+            rm -rf ~/docker-deploy
             mkdir -p ~/docker-deploy
-
-      - name: 🚀 Copy docker-compose.yml to server
-        uses: appleboy/scp-action@v0.1.4
-        with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          source: "docker-compose/docker-compose.yml"
-          target: "/home/${{ secrets.SSH_USER }}/docker-deploy/docker-compose.yml"
-
-      - name: 🐳 Run docker-compose from docker-deploy/
-        uses: appleboy/ssh-action@v1.0.0
-        with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          script: |
+            git clone https://github.com/${{ github.repository }}.git ~/docker-deploy
             cd ~/docker-deploy
-            ls -l docker-compose.yml
+            git checkout ${{ github.ref_name }}
+            cd docker-compose/$VERSION
             docker-compose pull
             docker-compose up -d --build
