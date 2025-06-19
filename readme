@@ -1,0 +1,118 @@
+servername : docker-dev-server 
+
+
+user : dev
+pass : P@ssDEv@001word
+
+
+sudo usermod -aG sudo dev
+
+1. ฝั่ง Azure VM (Server เปล่า) – เตรียมแค่ SSH
+✅ สิ่งเดียวที่ต้องมีคือ:
+เปิด SSH (port 22)
+
+สร้างผู้ใช้ (เช่น ubuntu)
+
+ตั้งค่า authorized_keys เพื่อให้ GitHub Actions SSH เข้าได้
+
+
+# ใน Azure VM
+
+ssh-keygen -t rsa -b 4096 -C "github-actions-deploy" -f ~/.ssh/dev-server
+
+cat ~/.ssh/dev-server.pub
+
+cat ~/.ssh/dev-server.pub
+ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQDnzynQEzWs7GxWQaEI/JwhPGAZ0iqp2ymmdWrF4PG8EogSBbA3J04WaY459BvW/6z1NkMxTuLXk2USX05JKxvMPXtBYjX39qVB9da27U1YJkNRpwg6C3NfJjV9/zge8JfmqKVz0+vffVDup43xTCyntrsY4KMEfr7A3zzdc7fU4lqUKI079CtwkBwbYK96APrrWLDLXJaSiT2nV7kc4apnCnoMOgjM/TDqIh4eJb8wWmQ8/WKKJBgWtaC+zH8BVixkWnt+Xk57oQ8vVxJMLhpaOsPcjSexbufnMDvCo4sCCgrtm1dhH+mYtwW6+wXe2z5w5vNtKgG74VXcR+oYp7086fJmMemf4m7TFJs/sWUw9BuTr7OIwNEEsYpbFV7MQBTHmtVRDhIlbagn3p3IoeUxGbkXZm4zrYYHu05gtzNqdSqomU3w7a0to4wvAFgcA1hn04tU0OI/UW2jkC7RlYj4OxnnikZAWLHFfyQ1NhgvP11w49XTZ0NucL+z1+QNd42IJmRPXCKHwXlxo6HQu9lyi6L09tjDtEPt+bCPV28bMXlRCGm5ezprxQuex4znmGNvV67vImGLLafl7RG6/6Nq5Lza+oHhIhbgtlMC1TkeQmxa8D1AD9e9tOI751i/O+b3kt+2tqH3W+aq9Az73krWWK53WYBBBZnHBsW5ifsquw==
+
+echo "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQDnzynQEzWs7GxWQaEI/JwhPGAZ0iqp2ymmdWrF4PG8EogSBbA3J04WaY459BvW/6z1NkMxTuLXk2USX05JKxvMPXtBYjX39qVB9da27U1YJkNRpwg6C3NfJjV9/zge8JfmqKVz0+vffVDup43xTCyntrsY4KMEfr7A3zzdc7fU4lqUKI079CtwkBwbYK96APrrWLDLXJaSiT2nV7kc4apnCnoMOgjM/TDqIh4eJb8wWmQ8/WKKJBgWtaC+zH8BVixkWnt+Xk57oQ8vVxJMLhpaOsPcjSexbufnMDvCo4sCCgrtm1dhH+mYtwW6+wXe2z5w5vNtKgG74VXcR+oYp7086fJmMemf4m7TFJs/sWUw9BuTr7OIwNEEsYpbFV7MQBTHmtVRDhIlbagn3p3IoeUxGbkXZm4zrYYHu05gtzNqdSqomU3w7a0to4wvAFgcA1hn04tU0OI/UW2jkC7RlYj4OxnnikZAWLHFfyQ1NhgvP11w49XTZ0NucL+z1+QNd42IJmRPXCKHwXlxo6HQu9lyi6L09tjDtEPt+bCPV28bMXlRCGm5ezprxQuex4znmGNvV67vImGLLafl7RG6/6Nq5Lza+oHhIhbgtlMC1TkeQmxa8D1AD9e9tOI751i/O+b3kt+2tqH3W+aq9Az73krWWK53WYBBBZnHBsW5ifsquw==" >> ~/.ssh/authorized_keys
+chmod 700 ~/.ssh
+chmod 600 ~/.ssh/authorized_keys
+
+🎯 อย่าลืมเอา private key ใส่ GitHub Secrets:
+SSH_PRIVATE_KEY
+
+2. ไปที่ GitHub Repository ของคุณ → Settings
+ไปที่ Repository ที่คุณใช้
+
+คลิก Settings
+
+ในเมนูด้านซ้าย คลิก Secrets and variables → Actions
+
+ไปที่ Secrets tab → กดปุ่ม New repository secret
+
+Name	Value (ใส่อะไร)
+SSH_PRIVATE_KEY	วางเนื้อหา private key (จาก cat ~/.ssh/dev-server)
+SSH_HOST	IP ของ Azure VM (เช่น 20.75.10.123)
+SSH_USER	ชื่อผู้ใช้ (เช่น ubuntu)
+
+
+
+⚙️ 2. Workflow A: ติดตั้ง Docker บน VM
+
+# .github/workflows/install-docker.yml
+name: Install Docker on VM
+
+on:
+  workflow_dispatch:
+
+jobs:
+  install-docker:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 🐧 Connect via SSH and install Docker
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            sudo apt update
+            sudo apt install -y docker.io docker-compose
+            sudo usermod -aG docker $USER
+            sudo systemctl enable docker
+            docker --version
+            docker-compose --version
+✅ จะติดตั้งทั้ง docker และ docker-compose แล้วให้ใช้งานได้เลย
+
+🚀 3. Workflow B: Deploy ด้วย docker-compose
+
+# .github/workflows/deploy-app.yml
+name: Deploy Docker App
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📦 SCP docker-compose.yml to server
+        uses: appleboy/scp-action@v0.1.4
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          source: "docker-compose.yml"
+          target: "/home/ubuntu/app"
+
+      - name: 🚀 SSH and run docker-compose
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            cd /home/ubuntu/app
+            docker-compose pull
+            docker-compose up -d --build
+🔐 Secrets ที่คุณต้องใส่ใน GitHub
+ไปที่ Settings > Secrets แล้วเพิ่ม:
+
+SSH_HOST → IP VM
+
+SSH_USER → ชื่อผู้ใช้ใน VM (เช่น ubuntu)
+
+SSH_PRIVATE_KEY → เอาค่า private key มาใส่ตรงๆ (เริ่มต้นด้วย -----BEGIN OPENSSH PRIVATE KEY-----)
+
