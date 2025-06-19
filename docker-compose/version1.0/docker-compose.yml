@@ -7,6 +7,7 @@ networks:
 services:
   postgres:
     image: postgres:15
+    container_name: postgres_db
     restart: always
     environment:
       POSTGRES_USER: myuser
@@ -26,6 +27,7 @@ services:
 
   webapi:
     image: sooyaa02/webappandapi:v1.7
+    container_name: webapi_container
     restart: always
     depends_on:
       postgres:
@@ -40,6 +42,7 @@ services:
 
   webapp:
     image: sooyaa02/webapp:v1.5
+    container_name: webapp_container
     restart: always
     depends_on:
       - webapi
