@@ -1,12 +1,16 @@
 name: Deploy by Version
 
 on:
-  workflow_dispatch:
+    workflow_dispatch:
     inputs:
       version:
-        description: "Docker Compose Version (เช่น version1.0)"
+        description: "เลือก Docker Compose Version"
         required: true
-        default: "version1.0"
+        type: choice
+        options:
+          - version1.0
+          - version2.0
+          - version3.0
 
 jobs:
   deploy:
