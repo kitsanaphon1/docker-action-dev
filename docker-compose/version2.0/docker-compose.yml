@@ -25,7 +25,7 @@ services:
       timeout: 5s
 
   webapi:
-    image: sooyaa02/api-unittest:latest
+    image: sooyaa02/webappandapi:v1.6
     restart: always
     depends_on:
       postgres:
@@ -39,7 +39,7 @@ services:
       - mynetwork
 
   webapp:
-    image: sooyaa02/apphr:latest
+    image: sooyaa02/webapp:v1.4
     restart: always
     depends_on:
       - webapi
