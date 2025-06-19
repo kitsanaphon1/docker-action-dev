@@ -34,5 +34,6 @@ jobs:
             cd ~/docker-deploy
             git checkout ${{ github.ref_name }}
             cd docker-compose/$VERSION
+            docker-compose down --remove-orphans     # ✅ ป้องกัน container ค้าง/ซ้ำ
             docker-compose pull
             docker-compose up -d --build
