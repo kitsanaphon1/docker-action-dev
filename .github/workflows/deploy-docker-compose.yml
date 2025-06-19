@@ -27,26 +27,26 @@ jobs:
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            set -e  # ❗ หยุด script ถ้าเจอ error
-
+            set -e
             VERSION=${{ github.event.inputs.version }}
-            echo "📦 Deploying version: $VERSION"
 
-            # เคลียร์โฟลเดอร์เก่าและ clone repo ใหม่
+            echo "📦 เริ่ม deploy version: $VERSION"
+
+            # ✅ เคลียร์ repo เดิมก่อน
             rm -rf ~/docker-deploy
-            mkdir -p ~/docker-deploy
             git clone https://github.com/${{ github.repository }}.git ~/docker-deploy
+
             cd ~/docker-deploy
             git checkout ${{ github.ref_name }}
-
-            # เข้าไปยังโฟลเดอร์ของ docker-compose เวอร์ชันนั้น
             cd docker-compose/$VERSION
 
-            # ปิด container เก่าและ clean orphan
-            docker-compose down --remove-orphans
+            echo "🛑 หยุดและลบ container เก่า"
+            docker-compose down --remove-orphans  # ❗ หยุด container ตัวเก่าที่ bind พอร์ตอยู่
 
-            # ดึง image ใหม่ + deploy
+            echo "📥 ดึง image ใหม่ (ถ้ามี)"
             docker-compose pull
+
+            echo "🚀 รัน container ใหม่แบบ clean"
             docker-compose up -d --build
 
-            echo "✅ Deploy version $VERSION เสร็จสิ้นเรียบร้อย"
+            echo "✅ Deploy สำเร็จ version: $VERSION"
