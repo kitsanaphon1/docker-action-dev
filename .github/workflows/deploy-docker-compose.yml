@@ -1,7 +1,7 @@
 name: Deploy by Version
 
 on:
-    workflow_dispatch:
+  workflow_dispatch:
     inputs:
       version:
         description: "เลือก Docker Compose Version"
