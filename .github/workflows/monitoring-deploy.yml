@@ -23,19 +23,19 @@ jobs:
       - name: Copy monitoring files to remote Docker server
         uses: appleboy/scp-action@v0.1.7
         with:
-          host: ${{ secrets.DOCKER_HOST }}
-          username: ${{ secrets.DOCKER_USER }}
-          key: ${{ secrets.DOCKER_SSH_KEY }}
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
           source: "./monitoring"
-          target: "/home/${{ secrets.DOCKER_USER }}/"
+          target: "/home/${{ secrets.SSH_USER }}/"
 
       - name: Run Docker Compose on server
         uses: appleboy/ssh-action@v1.0.0
         with:
-          host: ${{ secrets.DOCKER_HOST }}
-          username: ${{ secrets.DOCKER_USER }}
-          key: ${{ secrets.DOCKER_SSH_KEY }}
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            cd /home/${{ secrets.DOCKER_USER }}/monitoring
+            cd /home/${{ secrets.SSH_USER }}/monitoring
             docker compose down || true
             docker compose up -d
