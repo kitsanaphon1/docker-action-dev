@@ -1,0 +1,41 @@
+name: Monitoring Docker Deploy
+
+on:
+  push:
+    paths:
+      - 'monitoring/**'
+      - '.github/workflows/monitoring-deploy.yml'
+    branches:
+      - dev
+
+jobs:
+  deploy-monitoring:
+    name: Deploy Monitoring Stack
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Set up Docker
+        uses: docker/setup-buildx-action@v3
+
+      - name: Copy monitoring files to remote Docker server
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.DOCKER_HOST }}
+          username: ${{ secrets.DOCKER_USER }}
+          key: ${{ secrets.DOCKER_SSH_KEY }}
+          source: "./monitoring"
+          target: "/home/${{ secrets.DOCKER_USER }}/"
+
+      - name: Run Docker Compose on server
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.DOCKER_HOST }}
+          username: ${{ secrets.DOCKER_USER }}
+          key: ${{ secrets.DOCKER_SSH_KEY }}
+          script: |
+            cd /home/${{ secrets.DOCKER_USER }}/monitoring
+            docker compose down || true
+            docker compose up -d
