@@ -1,12 +1,7 @@
 name: Monitoring Docker Deploy
 
 on:
-  push:
-    paths:
-      - 'monitoring/**'
-      - '.github/workflows/monitoring-deploy.yml'
-    branches:
-      - dev
+  workflow_dispatch:  # ✅ manual run ได้จาก GitHub UI
 
 jobs:
   deploy-monitoring:
@@ -16,9 +11,6 @@ jobs:
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v3
-
-      - name: Set up Docker
-        uses: docker/setup-buildx-action@v3
 
       - name: Copy monitoring files to remote Docker server
         uses: appleboy/scp-action@v0.1.7
@@ -37,5 +29,10 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
             cd /home/${{ secrets.SSH_USER }}/monitoring
+
+            # ✅ เตรียมโฟลเดอร์ให้ Loki
+            mkdir -p loki-data
+            chmod -R 777 loki-data
+
             docker-compose down || true
             docker-compose up -d
