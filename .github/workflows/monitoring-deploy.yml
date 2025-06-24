@@ -30,11 +30,11 @@ jobs:
           script: |
             cd /home/${{ secrets.SSH_USER }}/monitoring
 
-            # ✅ เตรียมโฟลเดอร์ให้ Loki แบบครบ
-            mkdir -p loki-data/chunks
-            mkdir -p loki-data/index
-            mkdir -p loki-data/boltdb-cache
-            chmod -R 777 loki-data
+            # ✅ เตรียมโฟลเดอร์ให้ Loki แบบครบ พร้อมสิทธิ์ root
+            sudo mkdir -p loki-data/chunks
+            sudo mkdir -p loki-data/index
+            sudo mkdir -p loki-data/boltdb-cache
+            sudo chmod -R 777 loki-data
 
             # ✅ รัน Docker Compose ใหม่
             docker-compose down || true
