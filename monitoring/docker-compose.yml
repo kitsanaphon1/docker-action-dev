@@ -11,6 +11,7 @@ services:
       - --config.file=/etc/prometheus/prometheus.yml
     ports:
       - "9090:9090"
+    restart: unless-stopped
 
   grafana:
     image: grafana/grafana-oss:latest
@@ -22,6 +23,7 @@ services:
     depends_on:
       - prometheus
       - loki
+    restart: unless-stopped
 
   node-exporter:
     image: prom/node-exporter:latest
@@ -51,7 +53,8 @@ services:
     volumes:
       - ./loki-config.yaml:/etc/loki/local-config.yaml
       - ./loki-data:/tmp/loki
-    user: root  # ✅ เพิ่มบรรทัดนี้
+    user: root
+    restart: unless-stopped
 
   promtail:
     image: grafana/promtail:2.9.1
@@ -64,6 +67,7 @@ services:
     command: -config.file=/etc/promtail/promtail.yaml
     depends_on:
       - loki
+    restart: unless-stopped
 
 volumes:
   prometheus_data:
