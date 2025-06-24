@@ -34,6 +34,7 @@ jobs:
             sudo mkdir -p loki-data/chunks
             sudo mkdir -p loki-data/index
             sudo mkdir -p loki-data/boltdb-cache
+            sudo mkdir -p loki-data/compactor
             sudo chmod -R 777 loki-data
 
             # ✅ รัน Docker Compose ใหม่
