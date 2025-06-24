@@ -51,6 +51,7 @@ services:
     volumes:
       - ./loki-config.yaml:/etc/loki/local-config.yaml
       - ./loki-data:/tmp/loki
+    user: root  # ✅ เพิ่มบรรทัดนี้
 
   promtail:
     image: grafana/promtail:2.9.1
